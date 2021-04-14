@@ -1,2 +1,2 @@
 ﻿name;ftp;ftp_port;ftp_user;ftp_password;ftp_folder
-remote;10.50.10.30;21;remote;Qwerty13Q;PIC
+remote;10.0.0.1;21;remote;qwerty13;PIC
