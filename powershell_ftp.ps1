@@ -8,7 +8,7 @@ Import-Csv .\Desktop\TestFTP\ftp.csv -Delimiter ";" | ForEach-Object {
     $ftp_password = $_.ftp_password
     $ftp = "ftp://" + $_.ftp + ":" + $ftp_port
 
-    # ftp_folder_empty
+    # Ftp folder empty
     if (!$ftp_folder)
     {
         $ftp_uri = $ftp + "/"
@@ -17,14 +17,13 @@ Import-Csv .\Desktop\TestFTP\ftp.csv -Delimiter ";" | ForEach-Object {
     {
         $ftp_uri = $ftp + "/" + $ftp_folder + "/"
     }
-    # ftp_folder_empty
 
-    $LocalPath = "\\fs01\1C\FTPFiles\$folder_name\"
+    $LocalPath = "FTPFiles\$folder_name\"
 
-    # Перевірка та створення папки
+    # Check and create a folder
     if(!(Test-Path $LocalPath)){ New-Item -ItemType Directory -Path $LocalPath }
 
-    # Список файлів з FTP
+    # List of files from FTP
     function Get-FtpDir ($url, $credentials)
     {
     $request = [Net.FtpWebRequest]::Create($url)
@@ -32,16 +31,19 @@ Import-Csv .\Desktop\TestFTP\ftp.csv -Delimiter ";" | ForEach-Object {
     $request.Method = [System.Net.WebRequestMethods+FTP]::ListDirectory
     (New-Object IO.StreamReader $request.GetResponse().GetResponseStream()).ReadToEnd() -split "`r`n"
     }
-
+    
+    # Needed for the download
     $webclient = New-Object System.Net.WebClient 
     $webclient.Credentials = New-Object System.Net.NetworkCredential($ftp_user,$ftp_password)  
     $webclient.BaseAddress = $ftp_uri
 
-    # Фільтрування файлів
+    # File filtering
     $files = Get-FTPDir $ftp_uri $webclient.Credentials | Where-Object { $_ -like "*.xls" -or $_ -like "*.xlsx" }
-    # Завантаження файлів
-    $files | ForEach-Object { $webClient.DownloadFile( $_,$($LocalPath + $_) ) }
+    # Download and delete file from ftp
+    $files | ForEach-Object { 
+    $webClient.DownloadFile( $_,$($LocalPath + $_) ) 
+    if (Test-Path ($LocalPath+$_)) { Remove-FtpFile ($ftp_uri+$_) $webclient.Credentials }
 
-    #log
-    Write-Output "$(Get-Date) $folder_name $ftp_uri)" + $Error[0] | Out-File "\\fs01\1C\FTPFiles\log.txt" -Append
+    # Log
+    Write-Output "$(Get-Date) $folder_name $ftp_uri)" + $Error[0] | Out-File "log.txt" -Append
 }
