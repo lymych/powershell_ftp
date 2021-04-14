@@ -1,5 +1,6 @@
 Import-Csv .\Desktop\TestFTP\ftp.csv -Delimiter ";" | ForEach-Object {
     $Error.Clear()
+    
     # csv
     $folder_name = $_.name
     $ftp_folder = $_.ftp_folder
